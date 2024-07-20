@@ -1,0 +1,29 @@
+<div class="card">
+    <div class="card-header h4">Vartotojų sąrašas</div>
+    <div class="card-body">
+        <button mat-raised-button color="primary" class="btn mb-3" routerLink="/users/add">Pridėti vartotoją</button>
+        <table class="w-100">
+            <thead class="h5 fw-bold ">
+                <tr>
+                    <th>Vardas</th>
+                    <th>El. paštas</th>
+                    <th>Amžius</th>
+                    <th>Adresas</th>
+                    <th>Veiksmai</th>
+                </tr>
+            </thead>
+            <tbody class="h6 table-bordered">
+                <tr *ngFor="let user of users; let i = index">
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.age }}</td>
+                    <td>{{ user.address }}</td>
+                    <td>
+                        <button mat-raised-button color="accent" class="btn me-2" [routerLink]="'/users/' + user._id">Atnaujinti</button>
+                        <button mat-raised-button color="warn" class="btn" (click)="deleteUser(user._id!)">Ištrinti</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

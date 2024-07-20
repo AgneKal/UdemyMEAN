@@ -1,0 +1,492 @@
+Aplankas - /projektas/.
+
+Projekto aplanke dar du aplankai:
+1) /backend/ - sukuriamas rankiniu būdu;
+2) /frontend/ - sukuriamas Angular'o.
+
+Migravimas per aplankus terminale: cd, pvz., "cd ../.." nukels į C: diską;
+
+Backend'o paruošimas:
+1) pasitikriname node versiją:
+    node -v
+2) pasitikriname npm versiją:
+    npm -v
+3) inicijuojame projektą:
+    npm init
+4) įdiegiam express'ą:
+    npm install express
+5) package.json faile:
+    a) kaip "main" nurodom "app.js";
+    b) sukuriam script'ą: "start" : "node app.js";
+    c) nurodom "type" : "module"
+6) susikuriame failą /app.js/:
+
+    import express from 'express';
+
+    const app = express();
+    const port = 3000;
+
+    app.use(express.json());
+
+    app.listen(port, () => {
+        console.log(`Example app listening on port ${port}`)
+    })
+
+7) įdiegiame mongoose:
+    npm install mongoose --save
+8) papildome /app.js/ failą:
+
+    import mongoose from 'mongoose';
+
+    async function connectDb() {
+        await mongoose.connect('mongodb://localhost:27017', {
+            dbName: 'UserDb',
+        });
+    }
+
+    connectDb().catch((err) => console.error(err));
+
+9) sukuriame aplanką /db/ ir jame failą /user.js/:
+
+    import mongoose from "mongoose";
+
+    const userSchema = new mongoose.Schema({
+        name: String,
+        email: String,
+        age: Number,
+        address: String,
+        password: String
+    });
+
+    const User = mongoose.model('users', userSchema);
+
+    export { User };
+
+10) sukuriame aplanką /controllers/ ir jame failą /user.controller.js/:
+
+    import { User } from '../db/user.js';
+
+    async function addUser(userModel) {
+        let user = new User({
+            ...userModel
+        });
+        await user.save();
+        return user.toObject();
+    }
+
+    export { addUser };
+
+11) sukuriame aplanką /routes/ ir jame failą /user.route.js/:
+
+    import express from 'express';
+    import { addUser } from '../controllers/user.controller.js';
+    const router = express.Router();
+
+    router.get('/', (req, res) => {
+        res.send('Hello World!')
+    })
+
+    router.post('/users', async (req, res) => {
+        let user = await addUser(req.body);
+        res.send(user);
+    })
+
+    export { router };
+
+12) MongoDB Compass suskuriame naują db;
+13) papildome /user.controller.js/ failą: 
+
+    async function getUsers() {
+        const users = await User.find();
+        return users.map(u => u.toObject());
+    }
+
+    ! export { addUser, getUsers };
+
+14) papildome /user.route.js/ failą:
+
+    ! import { addUser, getUsers } from '../controllers/user.controller.js';
+
+    router.get('/users', async (req, res) => {
+        let users = await getUsers();
+        res.send(users);
+    })
+
+15) papildome /app.js/ failą:
+
+    import { router } from './routes/user.route.js';
+
+    app.use(router);
+
+16) papildome /user.controller.js/ failą:
+
+    async function updateUser(id, userModel) {
+        const filter = { _id: id };
+        await User.findByIdAndUpdate(filter, userModel);
+    }
+    ! export { addUser, getUsers, getUser, updateUser };
+
+17) papildome /user.route.js/ failą:
+
+    ! import { addUser, getUsers, getUser, updateUser } from '../controllers/user.controller.js';
+
+    router.put('/users/:id', async (req, res) => {
+        await updateUser(req.params['id'], req.body);
+        res.send({});
+    })
+
+18) papildome /user.controller.js/ failą:
+
+    async function deleteUser(id) {
+        await User.findByIdAndDelete(id);
+    }
+
+    ! export { addUser, getUsers, getUser, updateUser, deleteUser };
+
+19) papildome /user.route.js/ failą:
+
+    ! import { addUser, getUsers, getUser, updateUser, deleteUser } from '../controllers/user.controller.js';
+
+    router.delete('/users/:id', async (req, res) => {
+        await deleteUser(req.params['id']);
+        res.send({});
+    })
+
+20) įdiegiame cors paketą, kad naršyklė leistų kreiptis į kitą portą:
+    npm install cors
+
+21) papildome /app.js/ failą:
+    import cors from 'cors';
+
+    app.use(cors());
+
+Frontend'o paruošimas:
+1) patikrinam ar yra Angular: 
+    ng version
+2) jeigu nėra, įdiegiam (jeigu reikalinga konkreti versija, po cli dedam @ ir nurodom versiją):
+    npm install -g @angular/cli@17
+3) įsitikinam, kad esame projekto aplanke ir inicijuojame frontend'ą:
+    ng new frontend
+4) iš frontend aplanko ištrinam .git aplanką, o .gitignore failą keliame į projekto aplanką;
+5) .gitignore žiūrim kelius iki failų, įtraukiam .env failus;
+6) jeigu planuojame naudoti Angular material - įdiegiam:
+    ng add @angular/material
+7) jeigu naudosim Bootstrap - įdiegiam:
+    npm install bootstrap
+8) angular.json faile (prie style) nurodom kelią iki bootstrapo css failo:
+    "node_modules/bootstrap/dist/css/bootstrap.css",
+9) paleidžiame frontend'ą:
+    ng serve
+
+10) /app.component.html/ faile įsidedame toolbar'ą, button'ą ir router-outlet'ą:
+
+    <mat-toolbar color="primary">
+    <button mat-icon-button></button>
+    <span>MEAN CRUD APP</span>
+    </mat-toolbar>
+    <div class="row m-4">
+    <router-outlet></router-outlet>
+    </div>
+
+11) /app.component.ts/ faile importuojame toolbar'o ir button'o modulius:
+
+    import {MatButtonModule} from '@angular/material/button';
+    import {MatToolbarModule} from '@angular/material/toolbar';
+
+    ! imports: [RouterOutlet, MatButtonModule, MatToolbarModule],
+
+12) sugeneruojam users component'ą:
+    ng g c components/users
+
+13) /app.routes.ts/ faile susidedam route'us:
+
+    import { UsersComponent } from './components/users/users.component';
+
+    export const routes: Routes = [
+        {
+            path: "",
+            component: UsersComponent
+        },
+        {
+            path: "users",
+            component: UsersComponent
+        }
+    ];
+
+14) sugeneruojam user service'ą:
+    ng g s services/user
+
+15) sukuriame aplanką /models/ ir jame failą /user.ts/:
+
+    export interface User {
+        _id: string,
+        name: string,
+        email: string,
+        age: number,
+        address: string,
+        password: string
+    }
+
+16) /app.config.ts/ papildome providers masyvą provideHttpClient'u:
+
+    ! providers: [provideRouter(routes), provideAnimationsAsync(), provideAnimationsAsync(), provideHttpClient()]
+
+17) /users.component.ts/ faile:
+
+    import { Component } from '@angular/core';
+    import { User } from '../../../models/user';
+    import { UserService } from '../../services/user.service';
+    import { CommonModule } from '@angular/common';
+    import {MatButtonModule} from '@angular/material/button';
+
+    @Component({
+    selector: 'app-users',
+    standalone: true,
+    imports: [CommonModule, MatButtonModule],
+    templateUrl: './users.component.html',
+    styleUrl: './users.component.css'
+    })
+
+    export class UsersComponent {
+        public users: User[] = [];
+
+        private loadUsers(){
+            this.userService.getUsers().subscribe({
+            next:(data) => {
+                this.users = data;
+            }
+            })
+        }
+
+        constructor(private userService: UserService){
+            this.loadUsers();
+        }
+
+    }
+
+18) /user.component.html/ faile:
+
+    <div class="card">
+        <div class="card-header h4">Users Data</div>
+        <div class="card-body">
+            <button mat-raised-button color="primary" class="btn mb-3">Add user</button>
+            <table class="w-100">
+                <thead class="h5 fw-bold ">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Age</th>
+                        <th>Address</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="h6 table-bordered">
+                    <tr *ngFor="let user of users; let i = index">
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.age }}</td>
+                        <td>{{ user.address }}</td>
+                        <td>
+                            <button mat-raised-button color="accent" class="btn me-2">Edit user</button>
+                            <button mat-raised-button color="warn" class="btn">Delete user</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+19) /user.service.ts/ faile:
+
+    import { HttpClient } from '@angular/common/http';
+    import { Injectable } from '@angular/core';
+    import { User } from '../../models/user';
+
+    @Injectable({
+    providedIn: 'root'
+    })
+
+    export class UserService {
+        public apiUrl = "http://localhost:3000";
+        constructor(private http: HttpClient) { }
+
+        public getUsers() {
+            return this.http.get<User[]>(this.apiUrl + '/users')
+        }
+
+    }
+
+20) sugeneruojame naują komponentą:
+    ng g c components/users/userForm
+
+21) papildome /app.routes.ts/ failą:
+
+    {
+        path: "users/add",
+        component: UserFormComponent
+    }
+
+22) papildome /users.component.ts/ failą:
+
+    import { RouterLink } from '@angular/router';
+    ! imports: [CommonModule, MatButtonModule, RouterLink],
+
+23) papildome /user.component.html/ failą:
+
+    ! <button mat-raised-button color="primary" class="btn mb-3" routerLink="/users/add">Add user</button>    
+
+24) papildome /user-form.component.ts/ failą:
+
+    import {MatInputModule} from '@angular/material/input',
+    import { MatButtonModule } from '@angular/material/button';
+    import { ReactiveFormsModule } from '@angular/forms';
+    import { CommonModule } from '@angular/common';
+
+    ! imports: [MatInputModule, MatButtonModule, ReactiveFormsModule, CommonModule],
+
+    export class UserFormComponent {
+        public newUserForm: FormGroup;
+
+        constructor(private userService: UserService) {
+            this.newUserForm = new FormGroup({
+            'name': new FormControl(null, [Validators.required]),
+            'email': new FormControl(null, [Validators.required, Validators.email]),
+            'age': new FormControl(null, [Validators.required]),
+            'address': new FormControl(null, [Validators.required]),
+            'password': new FormControl(null, [Validators.required, Validators.minLength(8)]),
+            })
+    }
+
+    addUser(){
+        console.log(this.newUserForm.value);
+    }
+}
+
+
+25) papildome /user-form.component.html/ failą:
+
+    <div class="card">
+        <div *ngIf="!editUserId" class="card-header h4">Įtraukti naują vartotoją</div>
+        <div *ngIf="editUserId" class="card-header h4">Atnaujinti vartotoją</div>
+        <div class="card-body">
+            <form action="" [formGroup]="newUserForm" class="d-flex flex-column">
+                <mat-form-field>
+                    <mat-label>Vardas</mat-label>
+                    <input type="text" matInput formControlName="name">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>El. pašto adresas</mat-label>
+                    <input type="email" matInput formControlName="email">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Amžius</mat-label>
+                    <input type="number" matInput formControlName="age">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Adresas</mat-label>
+                    <input type="text" matInput formControlName="address">
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Slaptažodis</mat-label>
+                    <input type="password" matInput formControlName="password">
+                </mat-form-field>
+                <div *ngIf="!editUserId">
+                    <button mat-raised-button color="primary" (click)="addUser()">Pridėti vartotoją</button>
+                </div>
+                <div *ngIf="editUserId">
+                    <button mat-raised-button color="primary" (click)="updateUser()">Atnaujinti vartotoją</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+26) papildome /user.service.ts/ failą:
+
+    public addUser(model: User){
+        return this.http.post<User>(this.apiUrl + '/users', model)
+    }
+
+27) papildome /user-form.component.ts/ failą:
+
+    addUser(){
+        if(this.newUserForm.invalid) {
+            alert('Prašome užpildyti privalomus laukus');
+            return;
+        }
+        const model: User = this.newUserForm.value as User;
+        this.userService.addUser(model).subscribe((result) => {
+            alert('Vartotojas pridėtas sėkmingai');
+            this.router.navigateByUrl('/');
+        })
+    }
+
+29) papildome /app.routes.ts/ failą:
+
+    {
+        path: "users/:id",
+        component: UserFormComponent
+    }
+
+30) papidome /user.component.html/ failą:
+
+    <button mat-raised-button color="accent" class="btn me-2" [routerLink]="'/users/' + user._id">Edit user</button>
+
+31) papildome /user-form.component.ts/ failą:
+
+    ! import { ActivatedRoute, Router } from '@angular/router';
+
+    ! constructor(private userService: UserService, private router: Router, private activatedRoute: ActivatedRoute)
+
+    ngOnInit(){
+        this.editUserId = this.activatedRoute.snapshot.params['id'];
+        if(this.editUserId) {
+            this.userService.getUser(this.editUserId).subscribe((result) => {
+            this.newUserForm.patchValue(result)
+            })
+        }
+    }
+
+    updateUser(){
+        if(this.newUserForm.invalid) {
+            alert('Prašome užpildyti privalomus laukus');
+            return;
+        }
+        const model: User = this.newUserForm.value as User;
+        this.userService.updateUser(this.editUserId, model).subscribe((result) => {
+            alert('Vartotojas atnaujintas sėkmingai');
+            this.router.navigateByUrl('/');
+        })
+    }
+
+32) papildome /user.service.ts/ failą:
+
+    public getUser(id: string) {
+        return this.http.get<User>(this.apiUrl + '/users/' + id)
+    }
+
+    public updateUser(id: string, model: User){
+        return this.http.put<User>(this.apiUrl + '/users/' + id, model)
+    }
+
+    public deleteUser(id: string){
+        return this.http.delete(this.apiUrl + '/users/' + id)
+    }
+
+33) papildome /user.component.html/ failą:
+
+    ! <button mat-raised-button color="warn" class="btn" (click)="deleteUser(user._id)">Ištrinti vartotoją</button>
+
+34) papildome /user.component.ts/ failą:
+
+    public deleteUser(id: string){
+        const ok = confirm("Ar tikrai norite ištrinti vartotoją?")
+        if (ok) {
+            this.userService.deleteUser(id).subscribe({
+                next: (result) => {
+                    this.loadUsers();
+                    alert('Vartotojas sėkmingai ištrintas')
+                }
+            })
+        }
+    }
+

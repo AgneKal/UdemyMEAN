@@ -1,0 +1,34 @@
+<div class="card">
+    <div *ngIf="!editUserId" class="card-header h4">Įtraukti naują vartotoją</div>
+    <div *ngIf="editUserId" class="card-header h4">Atnaujinti vartotoją</div>
+    <div class="card-body">
+        <form action="" [formGroup]="newUserForm" class="d-flex flex-column">
+            <mat-form-field>
+                <mat-label>Vardas</mat-label>
+                <input type="text" matInput formControlName="name">
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>El. pašto adresas</mat-label>
+                <input type="email" matInput formControlName="email">
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Amžius</mat-label>
+                <input type="number" matInput formControlName="age">
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Adresas</mat-label>
+                <input type="text" matInput formControlName="address">
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Slaptažodis</mat-label>
+                <input type="password" matInput formControlName="password">
+            </mat-form-field>
+            <div *ngIf="!editUserId">
+                <button mat-raised-button color="primary" (click)="addUser()">Pridėti vartotoją</button>
+            </div>
+            <div *ngIf="editUserId">
+                <button mat-raised-button color="primary" (click)="updateUser()">Atnaujinti vartotoją</button>
+            </div>
+        </form>
+    </div>
+</div>
