@@ -17,7 +17,7 @@ Backend'o paruošimas:
     npm install express
 5) package.json faile:
     a) kaip "main" nurodom "app.js";
-    b) sukuriam script'ą: "start" : "node app.js";
+    b) sukuriam script'ą: "start" : "node app.js"
     c) nurodom "type" : "module"
 6) susikuriame failą /app.js/:
 
@@ -46,7 +46,7 @@ Backend'o paruošimas:
 
     connectDb().catch((err) => console.error(err));
 
-9) sukuriame aplanką /db/ ir jame failą /user.js/:
+9) sukuriame aplanką /models/ ir jame failą /user.js/:
 
     import mongoose from "mongoose";
 
@@ -64,7 +64,7 @@ Backend'o paruošimas:
 
 10) sukuriame aplanką /controllers/ ir jame failą /user.controller.js/:
 
-    import { User } from '../db/user.js';
+    import { User } from '../models/user.js';
 
     async function addUser(userModel) {
         let user = new User({
