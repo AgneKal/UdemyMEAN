@@ -17,8 +17,8 @@ Backend'o paruošimas:
     npm install express
 5) package.json faile:
     a) kaip "main" nurodom "app.js";
-    b) sukuriam script'ą: "start" : "node app.js"
-    c) nurodom "type" : "module"
+    b) sukuriam script'ą: "start" : "node app.js";
+    c) nurodom "type" : "module".
 6) susikuriame failą /app.js/:
 
     import express from 'express';
@@ -80,16 +80,17 @@ Backend'o paruošimas:
 
     import express from 'express';
     import { addUser } from '../controllers/user.controller.js';
+
     const router = express.Router();
 
     router.get('/', (req, res) => {
         res.send('Hello World!')
-    })
+    });
 
     router.post('/users', async (req, res) => {
         let user = await addUser(req.body);
         res.send(user);
-    })
+    });
 
     export { router };
 
@@ -120,6 +121,11 @@ Backend'o paruošimas:
 
 16) papildome /user.controller.js/ failą:
 
+    async function getUser(id) {
+        const user = await User.findById(id);
+        return user.toObject();
+    }
+
     async function updateUser(id, userModel) {
         const filter = { _id: id };
         await User.findByIdAndUpdate(filter, userModel);
@@ -129,6 +135,11 @@ Backend'o paruošimas:
 17) papildome /user.route.js/ failą:
 
     ! import { addUser, getUsers, getUser, updateUser } from '../controllers/user.controller.js';
+
+    router.get('/users/:id', async (req, res) => {
+        let user = await getUser(req.params['id']);
+        res.send(user);
+    })
 
     router.put('/users/:id', async (req, res) => {
         await updateUser(req.params['id'], req.body);
@@ -346,6 +357,7 @@ Frontend'o paruošimas:
 
     export class UserFormComponent {
         public newUserForm: FormGroup;
+        public editUserId!: string;
 
         constructor(private userService: UserService) {
             this.newUserForm = new FormGroup({
@@ -357,9 +369,6 @@ Frontend'o paruošimas:
             })
     }
 
-    addUser(){
-        console.log(this.newUserForm.value);
-    }
 }
 
 
@@ -427,7 +436,7 @@ Frontend'o paruošimas:
         component: UserFormComponent
     }
 
-30) papidome /user.component.html/ failą:
+30) papildome /user.component.html/ failą:
 
     <button mat-raised-button color="accent" class="btn me-2" [routerLink]="'/users/' + user._id">Edit user</button>
 
@@ -490,3 +499,136 @@ Frontend'o paruošimas:
         }
     }
 
+
+SELECT [ką paimti] from [iš kur paimti]
+SELECT name FROM country
+SELECT Name, Population FROM country
+SELECT Name, Population/1000000 FROM country <-galima iškart atlikti skaičiavimus
+SELECT Name, Population/1000000, 99 FROM country <-galima iškart pridėti naują stulpelį (čia 99)
+SELECT Name, Population/1000000, Population/SurfaceArea FROM country <-galima iškart pridėti naują funkciją, kuri atsivaizduos naujame stulpelyje
+SELECT Name, Population/1000000 as population_m, Population/SurfaceArea as density FROM country <- stulpeliams galime suteikti pavadinimą
+
+
+SELECT `Name`, `Population` FROM `country` WHERE `Code`='USA'
+
+SELECT Name, Population, LifeExpectancy FROM country WHERE Continent ="Europe" ORDER BY LifeExpectancy ASC <- asc - nuo mažiausio, desc - nuo didžiausio
+
+SELECT Name, Population, LifeExpectancy FROM country WHERE Continent ="Europe" ORDER BY LifeExpectancy ASC LIMIT 0, 10
+
+SELECT Name FROM country WHERE name LIKE 'L%' <- % bet kokie simboliai po L // svarbu viengubos kabutės
+
+
+SELECT `Name`, `IndepYear` FROM word.country WHERE `Continent`='Africa' AND `IndepYear` > 1990;
+
+
+
+SELECT `Name`, `SurfaceArea` FROM world.country WHERE `Continent`='Asia' ORDER BY `SurfaceArea` DESC LIMIT 0, 5;
+
+
+
+SELECT `Name`, `LifeExpectancy` FROM world.country WHERE `Continent`='Africa' AND `LifeExpectancy` IS NOT NULL ORDER BY `LifeExpectancy` ASC LIMIT 0,1;
+
+SELECT * FROM courses LEFT JOIN lecturers ON courses.lecturer_id=lecturers.id
+
+
+SELECT c.id, c.name AS course_name, c.lecturers_id, l.name, l.surname FROM courses c LEFT JOIN lecturers l ON c.lecturer_id=l.id
+
+SELECT Name, Code, SurfaceArea FROM country WHERE SurfaceArea=(SELECT max(SurfaceArea) FROM world.country)
+
+SELECT Name, Code, SurfaceArea FROM country WHERE code IN (SELECT code FROM world.country WHERE SurfaceArea > 10000000 ORDER BY SurfaceArea DESC)
+
+SELECT max(SurfaceArea) FROM (SELECT Name, Code, SurfaceArea FROM country WHERE Continent='Europe')c
+
+SELECT max(SurfaceArea) FROM country WHERE Continent='Europe'
+
+SELECT Continent, max(SurfaceArea) FROM country GROUP BY continent
+
+SELECT Continent, avg(LifeExpectancy) as le FROM country GROUP BY continent ORDER BY le;
+
+SELECT region, sum(Population) as pop FROM country GROUP BY region HAVING pop>100000000 ORDER BY pop DESC
+
+
+INSERT:
+INSERT INTO students (name, surname) VALUES ('Jonas', 'Anyžius');
+INSERT INTO students.students (name, surname) SELECT name, surname FROM...
+
+DELETE:
+DELETE FROM students WHERE id=10;
+
+
+
+MEAN - struktūra
+MVC - architektūra
+
+Turėtų būti (be typescript'o):
+
+Projektas\node_modules
+Projektas\angular
+Projektas\back_end\Express_js
+
+Naudojant typescript (reikalingos atskiros konfiguracijos):
+Projektas\front
+Projektas\front\node_modules
+Projektas\server
+Projektas\server\node_modules
+
+
+npm init -y
+//typescript instaliavimas
+npm install typescript --save-dev
+tsc --init
+//typescript node biblioteka
+npm install @types/node --save-dev
+//typescript automatinis perkompiliavimas
+npm install ts-node nodemon --save-dev
+
+//expressJS (express framework), cors (padeda išspręsti dviejų portų bėdas), dotenv (konfigūraciniai failai)
+npm install express cors dotenv
+
+//expressJS, cors, node-dev bibliotekos (tik typescript)
+npm install ts-node-dev @types/express @types/cors --save-dev
+
+tsconfig.json:
+    "rootDir": "./src", 
+ "outDir": "./dist",
+
+package.json:
+"start": "npx nodemon",
+
+npm install --save body-parser
+
+nodemon.json:
+{
+    "watch":["src"],
+    "ext":".ts, .js",
+    "ignore":[],
+    "exec":"tsc&&node dist/server.js"
+}
+
+npm install mysql2
+
+passwordams slėpti:
+npm install bcrypt
+npm install @types/bcrypt
+
+jwt - kodavimui
+npm install jsonwebtoken 
+npm install @types/jsonwebtoken
+
+kai failus norim siųsti
+$ npm install --save multer
+npm install --save @types/multer
+
+darbui su mongoDB ir mongoose
+npm install mongoose
+npm install --save-dev @types/mongoose
+
+frontui
+npm install bootstrap
+//angular.json
+"node_modules/bootstrap/dist/css/bootstrap.css",
+
+
+pdf (bet nedirba su typescriptu)
+
+npm install pdf-master
